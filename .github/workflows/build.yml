@@ -1,0 +1,30 @@
+name: Patch APK
+
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install apk-mitm
+        run: npm install -g apk-mitm
+        
+      - name: Download APK from release
+        run: |
+          curl -L -o Likee_5.55.1.apk "https://github.com/fgfyggg/Likee-patcher/releases/download/v1.0/Likee_5.55.1.apk"
+        
+      - name: Patch APK
+        run: apk-mitm Likee_5.55.1.apk
+        
+      - name: Upload Patched APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: patched-apk
+          path: "*-patched.apk"
