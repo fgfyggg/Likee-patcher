@@ -20,7 +20,7 @@ jobs:
 
       - name: Download apktool
         run: |
-          wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.10.0.jar -O apktool.jar
+          wget https://github.com/iBotPeaches/Apktool/releases/download/v2.10.0/apktool_2.10.0.jar -O apktool.jar
 
       - name: Decode APK
         run: |
