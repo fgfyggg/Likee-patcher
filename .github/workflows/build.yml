@@ -7,24 +7,54 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
         with:
-          node-version: '20'
-          
-      - name: Install apk-mitm
-        run: npm install -g apk-mitm
-        
+          distribution: 'temurin'
+          java-version: '17'
+
       - name: Download APK from release
         run: |
           curl -L -o Likee_5.55.1.apk "https://github.com/fgfyggg/Likee-patcher/releases/download/v1.0/Likee_5.55.1.apk"
-        
-      - name: Patch APK
-        run: apk-mitm Likee_5.55.1.apk
-        
+
+      - name: Download apktool
+        run: |
+          wget https://bitbucket.org/iBotPeaches/apktool/downloads/apktool_2.10.0.jar -O apktool.jar
+
+      - name: Decode APK
+        run: |
+          java -jar apktool.jar d Likee_5.55.1.apk -o likee_decoded
+
+      - name: Add network security config
+        run: |
+          cat > likee_decoded/res/xml/network_security_config.xml << 'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <network-security-config>
+              <base-config cleartextTrafficPermitted="true">
+                  <trust-anchors>
+                      <certificates src="system" />
+                      <certificates src="user" />
+                  </trust-anchors>
+              </base-config>
+          </network-security-config>
+          EOF
+
+      - name: Patch AndroidManifest.xml
+        run: |
+          sed -i 's#<application#<application android:networkSecurityConfig="@xml/network_security_config"#' likee_decoded/AndroidManifest.xml
+
+      - name: Rebuild APK
+        run: |
+          java -jar apktool.jar b likee_decoded -o likee_patched.apk
+
+      - name: Sign APK
+        run: |
+          wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
+          java -jar signer.jar --apks likee_patched.apk --out . --allowResign
+
       - name: Upload Patched APK
         uses: actions/upload-artifact@v4
         with:
           name: patched-apk
-          path: "*-patched.apk"
+          path: "*.apk"
