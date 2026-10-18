@@ -19,11 +19,11 @@ jobs:
 
       - name: Download APK from release
         run: |
-          curl -L -o Likee.apk "https://github.com/fgfyggg/Likee-patcher/releases/download/v1.0/Likee_5.55.1.apk"
+          curl -L -o LikeeLite.apk "https://github.com/fgfyggg/Likee-patcher/releases/download/v2.0/Likee.Lite_3.8.7.apk"
 
       - name: Patch APK
         run: |
-          objection patchapk -s Likee.apk
+          objection patchapk -s LikeeLite.apk
 
       - name: Upload Patched APK
         uses: actions/upload-artifact@v4
