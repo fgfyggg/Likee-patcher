@@ -15,7 +15,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install frida-tools objection tomllib
+          pip install frida-tools objection
 
       - name: Download APK from release
         run: |
