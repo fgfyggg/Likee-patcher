@@ -1,4 +1,4 @@
-name: Patch APK
+name: Patch APK with Frida
 
 on: [push, workflow_dispatch]
 
@@ -8,62 +8,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Java
-        uses: actions/setup-java@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          pip install frida-tools objection
 
       - name: Download APK from release
         run: |
-          curl -L -o LikeeLite.apk "https://github.com/fgfyggg/Likee-patcher/releases/download/v2.0/Likee.Lite_3.8.7.apk"
+          curl -L -o Likee.apk "https://github.com/fgfyggg/Likee-patcher/releases/download/v1.0/Likee_5.55.1.apk"
 
-      - name: Download apktool
+      - name: Patch APK
         run: |
-          wget https://github.com/iBotPeaches/Apktool/releases/download/v2.10.0/apktool_2.10.0.jar -O apktool.jar
-
-      - name: Decode APK
-        run: |
-          java -jar apktool.jar d LikeeLite.apk -o likee_decoded
-
-      - name: Add network security config
-        run: |
-          mkdir -p likee_decoded/res/xml
-          cat > likee_decoded/res/xml/network_security_config.xml << 'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <network-security-config>
-              <base-config cleartextTrafficPermitted="true">
-                  <trust-anchors>
-                      <certificates src="system" />
-                      <certificates src="user" />
-                  </trust-anchors>
-              </base-config>
-          </network-security-config>
-          EOF
-
-      - name: Patch AndroidManifest.xml
-        run: |
-          python3 -c "
-          import re
-          with open('likee_decoded/AndroidManifest.xml', 'r') as f:
-              content = f.read()
-          if 'android:networkSecurityConfig' not in content:
-              content = content.replace('<application', '<application android:networkSecurityConfig=\"@xml/network_security_config\"', 1)
-              with open('likee_decoded/AndroidManifest.xml', 'w') as f:
-                  f.write(content)
-          "
-
-      - name: Rebuild APK
-        run: |
-          java -jar apktool.jar b likee_decoded -o likee_patched.apk
-
-      - name: Sign APK
-        run: |
-          wget https://github.com/patrickfav/uber-apk-signer/releases/download/v1.3.0/uber-apk-signer-1.3.0.jar -O signer.jar
-          java -jar signer.jar --apks likee_patched.apk --out . --allowResign
+          objection patchapk -s Likee.apk
 
       - name: Upload Patched APK
         uses: actions/upload-artifact@v4
         with:
-          name: patched-apk
+          name: frida-patched-apk
           path: "*.apk"
