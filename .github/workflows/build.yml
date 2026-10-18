@@ -16,7 +16,7 @@ jobs:
 
       - name: Download APK from release
         run: |
-          curl -L -o Likee_5.55.1.apk "https://github.com/fgfyggg/Likee-patcher/releases/download/v1.0/Likee_5.55.1.apk"
+          curl -L -o LikeeLite.apk "https://github.com/fgfyggg/Likee-patcher/releases/download/v2.0/Likee.Lite_3.8.7.apk"
 
       - name: Download apktool
         run: |
@@ -24,10 +24,11 @@ jobs:
 
       - name: Decode APK
         run: |
-          java -jar apktool.jar d Likee_5.55.1.apk -o likee_decoded
+          java -jar apktool.jar d LikeeLite.apk -o likee_decoded
 
       - name: Add network security config
         run: |
+          mkdir -p likee_decoded/res/xml
           cat > likee_decoded/res/xml/network_security_config.xml << 'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <network-security-config>
@@ -42,7 +43,15 @@ jobs:
 
       - name: Patch AndroidManifest.xml
         run: |
-          sed -i 's#<application#<application android:networkSecurityConfig="@xml/network_security_config"#' likee_decoded/AndroidManifest.xml
+          python3 -c "
+          import re
+          with open('likee_decoded/AndroidManifest.xml', 'r') as f:
+              content = f.read()
+          if 'android:networkSecurityConfig' not in content:
+              content = content.replace('<application', '<application android:networkSecurityConfig=\"@xml/network_security_config\"', 1)
+              with open('likee_decoded/AndroidManifest.xml', 'w') as f:
+                  f.write(content)
+          "
 
       - name: Rebuild APK
         run: |
